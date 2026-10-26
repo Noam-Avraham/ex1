@@ -69,13 +69,16 @@ public class Main
 			/* [9] Close lexer input file */
 			/******************************/
 			l.yyclose();
-			if (error) 
+			if (error)
 			{
 				fileWriter.print("ERROR");
 			}
 			else
 			{
-				fileWriter.print(output.toString());
+				String result = output.toString();
+				if (result.endsWith("\n"))
+					result = result.substring(0, result.length() - 1);
+				fileWriter.print(result);
 			}
 
 			/**************************/
