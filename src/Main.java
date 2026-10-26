@@ -41,6 +41,7 @@ public class Main
 			/********************************/
 			StringBuilder output = new StringBuilder();
 			boolean error = false;
+			boolean first = true;
 			while (s.sym != TokenNames.EOF)
 			{
 				/************************/
@@ -50,6 +51,9 @@ public class Main
 					error=true;
 					break;
 				}
+				if (!first)
+					output.append("\n");
+				first = false;
 				output.append(tokenName(s.sym));
 				if (hasValue(s.sym))
 					output.append("(" + s.value + ")");
@@ -57,7 +61,7 @@ public class Main
 				output.append(l.getLine());
 				output.append(",");
 				output.append(l.getTokenStartPosition());
-				output.append("]\n");
+				output.append("]");
 
 				/***********************/
 				/* [8] Read next token */
@@ -75,10 +79,7 @@ public class Main
 			}
 			else
 			{
-				String result = output.toString();
-				if (result.endsWith("\n"))
-					result = result.substring(0, result.length() - 1);
-				fileWriter.print(result);
+				fileWriter.print(output.toString());
 			}
 
 			/**************************/
