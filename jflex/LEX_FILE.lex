@@ -74,8 +74,24 @@ import java_cup.runtime.*;
 LineTerminator	= \r|\n|\r\n
 WhiteSpace		= {LineTerminator} | [ \t]
 INTEGER			= 0 | [1-9][0-9]*
-ID				= [a-z]+
+LETTER          = [a-z]|[A-Z]
+DIGIT           = [0-9]
+ZEROINTAGER     = 0[0-9]+
+BIGINTEGER      = [4-9]{DIGIT}{4} | 3[3-9]{DIGIT}{3} | 32[8-9]{DIGIT}{2} | 327[7-9]{DIGIT} | 3276[8-9] | [1-9]{DIGIT}{4}{DIGIT}+
+ID  			= {LETTER}({LETTER}|{DIGIT})*
+STRING 			= \"{LETTER}*\"
+BAD_STRING      = \"[^\r\n\"]*\"
 
+COMMENT_LEGAL_CHAR     = {LETTER} | {DIGIT} | [ \t] | [()\[\]{}?!+\-*/.;]
+COMMENT_ONE            = "//" {COMMENT_LEGAL_CHAR}* {LineTerminator}
+BAD_COMMENT_ONE        = "//" [^\r\n]* {LineTerminator}
+
+NO_STAR                = {LETTER} | {DIGIT} | [ \t\r\n] | [()\[\]{}?!/.;\-+]
+NO_STAR_NO_SLASH       = {LETTER} | {DIGIT} | [ \t\r\n] | [()\[\]{}?!.;\-+]
+COMMENT_TWO            = "/*" ( {NO_STAR} | "*"+ {NO_STAR_NO_SLASH} )* "*"+ "/"
+ANY_NO_STAR            = [^*]
+ANY_NO_STAR_NO_SLASH    = [^*/]
+BAD_COMMENT_TWO        = "/*" ( {ANY_NO_STAR} | "*"+ {ANY_NO_STAR_NO_SLASH} )* "*"+ "/"
 /******************************/
 /* DOLLAR DOLLAR - DON'T TOUCH! */
 /******************************/
@@ -93,15 +109,49 @@ ID				= [a-z]+
 /**************************************************************/
 
 <YYINITIAL> {
-
+{WhiteSpace}		{/* skip */}
 "+"					{ return symbol(TokenNames.PLUS);}
 "-"					{ return symbol(TokenNames.MINUS);}
-"PPP"				{ return symbol(TokenNames.TIMES);}
+"*" 				{ return symbol(TokenNames.TIMES);}
 "/"					{ return symbol(TokenNames.DIVIDE);}
+"="					{ return symbol(TokenNames.EQ);}
+"<"					{ return symbol(TokenNames.LT);}
+">"					{ return symbol(TokenNames.GT);}
+"and"				{ return symbol(TokenNames.AND);}
+"or" 				{ return symbol(TokenNames.OR);}
 "("					{ return symbol(TokenNames.LPAREN);}
 ")"					{ return symbol(TokenNames.RPAREN);}
-{INTEGER}			{ return symbol(TokenNames.NUMBER, Integer.valueOf(yytext()));}
-{ID}				{ return symbol(TokenNames.ID,     yytext());}
-{WhiteSpace}		{ /* just skip what was found, do nothing */ }
+"["					{ return symbol(TokenNames.LBRACK);}
+"]"					{ return symbol(TokenNames.RBRACK);}
+"{"					{ return symbol(TokenNames.LBRACE);}
+"}"					{ return symbol(TokenNames.RBRACE);}
+","					{ return symbol(TokenNames.COMMA);}
+"."					{ return symbol(TokenNames.DOT);}
+";"					{ return symbol(TokenNames.SEMICOLON);}
+":="				{ return symbol(TokenNames.ASSIGN);}
+"array"				{ return symbol(TokenNames.ARRAY);}
+"class"				{ return symbol(TokenNames.CLASS);}
+"extends"			{ return symbol(TokenNames.EXTENDS);}
+"new"				{ return symbol(TokenNames.NEW);}
+"nil"				{ return symbol(TokenNames.NIL);}
+"if"				{ return symbol(TokenNames.IF);}
+"else"				{ return symbol(TokenNames.ELSE);}
+"while"				{ return symbol(TokenNames.WHILE);}
+"return"			{ return symbol(TokenNames.RETURN);}
+"int"				{ return symbol(TokenNames.TYPE_INT);}
+"string"			{ return symbol(TokenNames.TYPE_STRING);}
+"void"				{ return symbol(TokenNames.TYPE_VOID);}
+{ZEROINTAGER}		{ return symbol(TokenNames.ERROR);}
+{BIGINTEGER}		{ return symbol(TokenNames.ERROR);}
+{INTEGER}			{ return symbol(TokenNames.INT, Integer.valueOf(yytext()));}
+{ID}				{ return symbol(TokenNames.ID,     yytext());} 
+{STRING} 			{ return symbol(TokenNames.STRING,yytext());}
+{BAD_STRING}        { return symbol(TokenNames.ERROR);} 
+{COMMENT_ONE}		{/* skip */}
+{BAD_COMMENT_ONE}	{ return symbol(TokenNames.ERROR);}
+{COMMENT_TWO}       {/* skip */}
+{BAD_COMMENT_TWO}   { return symbol(TokenNames.ERROR);}
+[^]                 { return symbol(TokenNames.ERROR);}
 <<EOF>>				{ return symbol(TokenNames.EOF);}
+
 }
