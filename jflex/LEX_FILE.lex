@@ -86,12 +86,9 @@ COMMENT_LEGAL_CHAR     = {LETTER} | {DIGIT} | [ \t] | [()\[\]{}?!+\-*/.;]
 COMMENT_ONE            = "//" {COMMENT_LEGAL_CHAR}* {LineTerminator}
 BAD_COMMENT_ONE        = "//" [^\r\n]* {LineTerminator}
 
-NO_STAR                = {LETTER} | {DIGIT} | [ \t\r\n] | [()\[\]{}?!/.;\-+]
-NO_STAR_NO_SLASH       = {LETTER} | {DIGIT} | [ \t\r\n] | [()\[\]{}?!.;\-+]
-COMMENT_TWO            = "/*" ( {NO_STAR} | "*"+ {NO_STAR_NO_SLASH} )* "*"+ "/"
-ANY_NO_STAR            = [^*]
-ANY_NO_STAR_NO_SLASH    = [^*/]
-BAD_COMMENT_TWO        = "/*" ( {ANY_NO_STAR} | "*"+ {ANY_NO_STAR_NO_SLASH} )* "*"+ "/"
+/* exclusive state for scanning inside a Type-2 comment body, so <<EOF>> there is an error */
+%xstate COMMENT
+
 /******************************/
 /* DOLLAR DOLLAR - DON'T TOUCH! */
 /******************************/
@@ -149,9 +146,16 @@ BAD_COMMENT_TWO        = "/*" ( {ANY_NO_STAR} | "*"+ {ANY_NO_STAR_NO_SLASH} )* "
 {BAD_STRING}        { return symbol(TokenNames.ERROR);} 
 {COMMENT_ONE}		{/* skip */}
 {BAD_COMMENT_ONE}	{ return symbol(TokenNames.ERROR);}
-{COMMENT_TWO}       {/* skip */}
-{BAD_COMMENT_TWO}   { return symbol(TokenNames.ERROR);}
+"/*"                { yybegin(COMMENT); }
 [^]                 { return symbol(TokenNames.ERROR);}
 <<EOF>>				{ return symbol(TokenNames.EOF);}
 
+}
+
+<COMMENT> {
+{LineTerminator}		{ /* inside comment: skip newline, stay in COMMENT */ }
+{COMMENT_LEGAL_CHAR}	{ /* inside comment: skip legal char, stay in COMMENT */ }
+"*/"					{ yybegin(YYINITIAL); }
+[^]						{ return symbol(TokenNames.ERROR); }
+<<EOF>>					{ return symbol(TokenNames.ERROR); }
 }
